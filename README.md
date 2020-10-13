@@ -1,1 +1,0 @@
-# jjazure-func-csharp
