@@ -16,7 +16,6 @@ using Microsoft.Azure.Documents.Linq;
 
 namespace JJ.Function
 {
-
     public class ArticleItem
     {
         public string id { get; set; }
@@ -32,28 +31,12 @@ namespace JJ.Function
 
     public static class like
     {
+        // Save like into votes colletion
+        // sample: http://localhost:7071/api/like?articleId=1
+        // sample: while ($i -ne 30) { curl https://jjfunctionevents.azurewebsites.net/api/like?articleId=1 ; $i++ }
         [FunctionName("like")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
-            /*
-            JJ: nefunguje mapovani na query string
-            error: Microsoft.Azure.WebJobs.Host: Exception binding parameter 'articlesItems'. Microsoft.Azure.WebJobs.Host: Error while accessing 'articleId': property doesn't exist.
-            [CosmosDB(                
-                databaseName: "jjdb",
-                collectionName: "articles",
-                ConnectionStringSetting = "jjcosmos_DOCUMENTDB",
-                SqlQuery = "select * from articles r where r.articleid = {Query.articleId}")]
-                IEnumerable<ArticleItem> articlesItems,
-            */
-            [CosmosDB(
-                databaseName: "jjdb",
-                collectionName: "articles",
-                ConnectionStringSetting = "jjcosmos_DOCUMENTDB")] DocumentClient client,
-            [CosmosDB(
-                databaseName: "jjdb",
-                collectionName: "articles",
-                ConnectionStringSetting = "jjcosmos_DOCUMENTDB")]
-                ICollector<ArticleItem> articlesOut,
             [CosmosDB(
                 databaseName: "jjdb",
                 collectionName: "votes",
@@ -67,27 +50,12 @@ namespace JJ.Function
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
-            articleId = articleId ?? data?.articleId;            
-            
-            Uri collectionUri = UriFactory.CreateDocumentCollectionUri("jjdb", "articles");
-            IDocumentQuery<ArticleItem> query = client.CreateDocumentQuery<ArticleItem>(collectionUri)
-                .Where(p => p.articleid == articleId)
-                .AsDocumentQuery();
- 
-            while (query.HasMoreResults)
-            {
-                foreach (ArticleItem result in await query.ExecuteNextAsync())
-                {
-                    log.LogInformation(result.voteCount.ToString());
-                    result.voteCount++;
-                    articlesOut.Add(result);
+            articleId = articleId ?? data?.articleId;
 
-                    VoteItem newVoteItem = new VoteItem { articleid = result.articleid};
-                    await votesOut.AddAsync(newVoteItem);
-                }
-            }
-
-            string responseMessage = "done";
+            VoteItem newVoteItem = new VoteItem { articleid = articleId};
+            await votesOut.AddAsync(newVoteItem);
+       
+            string responseMessage = "like accepted";
             return new OkObjectResult(responseMessage);
         }
     }

@@ -26,9 +26,9 @@ namespace Company.Function
     "url": "http://jjdevbr1web.jjdev.local"
 }
 */
-    public static class HttpTriggerCSharp
+    public static class testConnectivity
     {
-        [FunctionName("HttpTriggerCSharp")]
+        [FunctionName("testConnectivity")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
