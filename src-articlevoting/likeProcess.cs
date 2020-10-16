@@ -27,7 +27,7 @@ namespace JJ.Function
             collectionName: "votes",
             ConnectionStringSetting = "jjcosmos_DOCUMENTDB",
             LeaseCollectionName = "leases", 
-            CreateLeaseCollectionIfNotExists = true)] IReadOnlyList<Document> input,
+            CreateLeaseCollectionIfNotExists = true)] IReadOnlyList<Document> inputDocuments,
         [CosmosDB(
             databaseName: "jjdb",
             collectionName: "articles",
@@ -39,23 +39,29 @@ namespace JJ.Function
             ICollector<ArticleItem> articlesOut,
         ILogger log)
         {            
-            if (input != null && input.Count > 0)
+            if (inputDocuments != null && inputDocuments.Count > 0)
             {
-                string articleId = input[0].GetPropertyValue<string>("articleid");
-                log.LogInformation("Like process triggered for articleId " + articleId);
+                log.LogInformation("Like process triggered, received document count: " + inputDocuments.Count.ToString());
 
-                Uri collectionUri = UriFactory.CreateDocumentCollectionUri("jjdb", "articles");
-                IDocumentQuery<ArticleItem> query = client.CreateDocumentQuery<ArticleItem>(collectionUri)
-                    .Where(p => p.articleid == articleId)
-                    .AsDocumentQuery();
- 
-                while (query.HasMoreResults)
+                foreach (Document input in inputDocuments)
                 {
-                    foreach (ArticleItem result in await query.ExecuteNextAsync())
+                    string articleId = input.GetPropertyValue<string>("articleid");
+                    log.LogInformation("Processing articleId " + articleId);
+
+                    Uri collectionUri = UriFactory.CreateDocumentCollectionUri("jjdb", "articles");
+                    IDocumentQuery<ArticleItem> query = client.CreateDocumentQuery<ArticleItem>(collectionUri)
+                        .Where(p => p.articleid == articleId)
+                        .AsDocumentQuery();
+    
+                    while (query.HasMoreResults)
                     {
-                        log.LogInformation(result.voteCount.ToString());
-                        result.voteCount++;
-                        articlesOut.Add(result);
+                        foreach (ArticleItem result in await query.ExecuteNextAsync())
+                        {
+                            log.LogInformation(result.voteCount.ToString());
+                            result.voteCount++;
+                            articlesOut.Add(result);
+                            log.LogInformation("Processed articleId " + articleId + " with voteCount " + result.voteCount.ToString());
+                        }
                     }
                 }
             }
