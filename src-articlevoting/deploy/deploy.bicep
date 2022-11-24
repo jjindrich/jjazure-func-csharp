@@ -143,6 +143,10 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
           value: storageAccount.name
         }
         {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
+        {
           name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
           value: applicationInsights.properties.InstrumentationKey
         }
