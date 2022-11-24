@@ -1,5 +1,5 @@
 param cosmosName string = 'jjazcosmos'
-param cosmosDbName string = 'jjazcosmosdb'
+param cosmosDbName string = 'jjdb'
 param functionAppName string = 'jjazfunc'
 param location string = resourceGroup().location
 
@@ -139,8 +139,8 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
       linuxFxVersion: 'DOTNET|6.0'
       appSettings: [
         {
-          name: 'AzureWebJobsStorage__accountName'
-          value: storageAccount.name
+          name: 'AzureWebJobsStorage'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
